@@ -1,0 +1,27 @@
+<animation-list xmlns:android="http://schemas.android.com/apk/res/android"
+    android:oneshot="false">
+
+    <item android:drawable="@drawable/jump0" android:duration="24" />
+    <item android:drawable="@drawable/jump1" android:duration="24" />
+    <item android:drawable="@drawable/jump2" android:duration="24" />
+    <item android:drawable="@drawable/jump3" android:duration="24" />
+    <item android:drawable="@drawable/jump4" android:duration="24" />
+    <item android:drawable="@drawable/jump5" android:duration="24" />
+    <item android:drawable="@drawable/jump6" android:duration="24" />
+    <item android:drawable="@drawable/jump7" android:duration="24" />
+    <item android:drawable="@drawable/jump8" android:duration="24" />
+    <item android:drawable="@drawable/jump9" android:duration="24" />
+    <item android:drawable="@drawable/jump10" android:duration="24" />
+    <item android:drawable="@drawable/jump11" android:duration="24" />
+    <item android:drawable="@drawable/jump12" android:duration="24" />
+    <item android:drawable="@drawable/jump13" android:duration="24" />
+    <item android:drawable="@drawable/jump14" android:duration="24" />
+    <item android:drawable="@drawable/jump15" android:duration="24" />
+    <item android:drawable="@drawable/jump16" android:duration="24" />
+    <item android:drawable="@drawable/jump17" android:duration="24" />
+    <item android:drawable="@drawable/jump18" android:duration="24" />
+    <item android:drawable="@drawable/jump19" android:duration="24" />
+    <item android:drawable="@drawable/jump20" android:duration="24" />
+
+
+</animation-list>
