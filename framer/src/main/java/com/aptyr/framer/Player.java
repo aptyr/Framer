@@ -1,6 +1,6 @@
 package com.aptyr.framer;
 
-/*
+/**
  * Copyright (C) 2016 Aptyr (github.com/aptyr)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,11 +16,12 @@ package com.aptyr.framer;
  * limitations under the License.
  */
 
+import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.DrawableRes;
 
-import java.util.List;
 import java.util.Map;
+import java.util.MissingResourceException;
 import java.util.concurrent.TimeUnit;
 
 import rx.Observable;
@@ -32,16 +33,16 @@ import rx.schedulers.Schedulers;
 
 public class Player {
 
-    public static final int INFINITY_REPEAT = 0;
-    public static final int NONE_REPEAT = 1;
+    public static final int BASED_ON_XML = -1;
 
-    public interface DataSource {
-        Map<Integer, List<Frame>> getFrames();
+    interface DataSource {
+        Map<Integer, XMLFrames> getFrames();
 
-        Map<Integer, Map<Frame, Drawable>> getFramesWithDrawables();
+        Drawable getDrawable(@DrawableRes int resID, Frame frame);
     }
 
     public interface Delegate {
+
         void onPlayerCompleted(@DrawableRes int resID);
 
         void onPlayerError(@DrawableRes int resID, Throwable e);
@@ -50,17 +51,17 @@ public class Player {
     }
 
     private Framer mFramer;
-
+    private @DrawableRes int currentPlayingAnimationResId;
     private DataSource mDataSource;
     private Delegate mDelegate;
 
-    private Subscription subscription;
+    private Subscription mSubscription;
 
     public Player(Framer framer) {
         mFramer = framer;
     }
 
-    public void setDataSource(DataSource dataSource) {
+    void setDataSource(DataSource dataSource) {
         mDataSource = dataSource;
     }
 
@@ -69,67 +70,91 @@ public class Player {
     }
 
     /**
-     * @param resID
+     * @param resID resourceID of XML file
      */
     public void play(@DrawableRes final int resID) {
-        startPlaying(resID, NONE_REPEAT);
+        startPlaying(resID, BASED_ON_XML);
     }
 
     /**
-     * @param resID
-     * @param repeatCount
+     * @param resID resourceID of XML file
+     * @param repeatCount number of repetitions
      */
-    public void play(@DrawableRes final int resID, int repeatCount) {
+    public void play(@DrawableRes final int resID, final int repeatCount) {
         startPlaying(resID, repeatCount);
     }
 
+    /**
+     * stops animation
+     */
     public void stop() {
-        if (subscription != null && !subscription.isUnsubscribed()) {
-            subscription.unsubscribe();
+        if (this.mSubscription != null && !this.mSubscription.isUnsubscribed()) {
+            this.mSubscription.unsubscribe();
+            animationCompleted(this.currentPlayingAnimationResId);
         }
     }
 
-    private void startPlaying(@DrawableRes final int resID, int repeatCount) {
+    private void startPlaying(@DrawableRes final int resID, final int repeatCount) {
+        this.currentPlayingAnimationResId = resID;
+
         stop();
 
-        Observable observable = Observable.from(mDataSource.getFrames().get(resID)).concatMap(new Func1<Frame, Observable<Frame>>() {
-            @Override
-            public Observable<Frame> call(Frame frame) {
-                return Observable.just(frame).delay(frame.getDuration(), TimeUnit.MILLISECONDS);
-            }
-        }).observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.newThread());
+        if(mDataSource.getFrames().containsKey(resID)) {
+            Observable observable = Observable.from(mDataSource.getFrames().get(resID).getFrames()).concatMap(new Func1<Frame, Observable<Frame>>() {
+                @Override
+                public Observable<Frame> call(Frame frame) {
+                    return Observable.just(frame).delay(frame.getDuration(), TimeUnit.MILLISECONDS);
+                }
+            }).observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.newThread());
 
-        if (repeatCount == INFINITY_REPEAT) {
-            observable = observable.repeat();
-        } else if (repeatCount != NONE_REPEAT) {
-            observable = observable.repeat(repeatCount);
+            if (repeatCount == BASED_ON_XML) {
+                if (this.mDataSource.getFrames().get(resID).isOneshot()) {
+                    observable = observable.repeat(1);
+                } else {
+                    observable = observable.repeat();
+                }
+            } else {
+                observable = observable.repeat(repeatCount);
+            }
+
+            this.mSubscription = observable.subscribe(new Observer<Frame>() {
+                @Override
+                public void onCompleted() {
+                    animationCompleted(resID);
+                }
+
+                @Override
+                public void onError(Throwable e) {
+                    animationError(resID, e);
+                }
+
+                @Override
+                public void onNext(Frame frame) {
+                    animationNextFrame(resID, frame);
+                    mFramer.setBackground(mDataSource.getDrawable(resID, frame));
+                }
+            });
+        } else {
+            animationError(resID, new Resources.NotFoundException("You need pass resourse (setBackgroundResources) before play it."));
         }
-
-        subscription = observable.subscribe(new Observer<Frame>() {
-            @Override
-            public void onCompleted() {
-                if (mDelegate != null) {
-                    mDelegate.onPlayerCompleted(resID);
-                }
-            }
-
-            @Override
-            public void onError(Throwable e) {
-                if (mDelegate != null) {
-                    mDelegate.onPlayerError(resID, e);
-                }
-            }
-
-            @Override
-            public void onNext(Frame frame) {
-                if (mDelegate != null) {
-                    mDelegate.onPlayerCurrentFrame(resID, frame);
-                }
-
-                mFramer.setBackground(mDataSource.getFramesWithDrawables().get(resID).get(frame));
-            }
-        });
     }
 
+    private void animationCompleted(@DrawableRes final int resID) {
+        if (mDelegate != null) {
+            mDelegate.onPlayerCompleted(resID);
+        }
+    }
+
+    private void animationError(@DrawableRes final int resID, Throwable throwable) {
+        if (mDelegate != null) {
+            mDelegate.onPlayerError(resID, throwable);
+        }
+    }
+
+    private void animationNextFrame(@DrawableRes final int resID, Frame frame) {
+        if (mDelegate != null) {
+            mDelegate.onPlayerCurrentFrame(resID, frame);
+        }
+    }
 
 }

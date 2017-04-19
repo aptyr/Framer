@@ -1,6 +1,6 @@
 package com.aptyr.framer;
 
-/*
+/**
  * Copyright (C) 2016 Aptyr (github.com/aptyr)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,46 +21,58 @@ import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.DrawableRes;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 class FramesHandler {
 
-    private Map<Integer, Map<Frame, Drawable>> framesWithDrawables = new HashMap<>();
-    private Map<Integer, List<Frame>> frames = new HashMap<>();
+    private Map<Integer, Map<Frame, Drawable>> drawables = new HashMap<>();
+    private Map<Integer, XMLFrames> frames = new HashMap<>();
 
     private XmlParser mXmlParser;
     private Resources mResources;
 
     public FramesHandler(Context context) {
-        mXmlParser = new XmlParser(context);
-        mResources = context.getResources();
+        this.mXmlParser = new XmlParser(context);
+        this.mResources = context.getResources();
     }
 
     public void setBackgroundResources(@DrawableRes int... resIDs){
 
-        for (int resID : resIDs) {
-            Map<Frame, Drawable> m = new HashMap<>();
-            List<Frame> f = new ArrayList<>();
+        recycle();
 
-            for (Frame frame : mXmlParser.getFrames(resID)) {
-                m.put(frame, mResources.getDrawable(frame.getResourceId()));
-                f.add(frame);
+        for (int resID : resIDs) {
+            Map<Frame, Drawable> drawables = new HashMap<>();
+
+            XMLFrames xmlFrames = this.mXmlParser.getFrames(resID);
+
+            for (Frame frame : xmlFrames.getFrames()) {
+                drawables.put(frame, mResources.getDrawable(frame.getResourceId()));
             }
 
-            framesWithDrawables.put(resID, m);
-            frames.put(resID, f);
+            this.drawables.put(resID, drawables);
+            this.frames.put(resID, xmlFrames);
         }
 
     }
 
-    public Map<Integer, Map<Frame, Drawable>> getFramesWithDrawables() {
-        return framesWithDrawables;
+    public Map<Integer, Map<Frame, Drawable>> getDrawables() {
+        return this.drawables;
     }
 
-    public Map<Integer, List<Frame>> getFrames() {
-        return frames;
+    public Map<Integer, XMLFrames> getFrames() {
+        return this.frames;
+    }
+
+    private void recycle() {
+
+        for (Integer resID : drawables.keySet()) {
+            for (Frame frame : drawables.get(resID).keySet()) {
+                drawables.get(resID).get(frame).setCallback(null);
+            }
+        }
+
+        drawables.clear();
+        frames.clear();
     }
 }

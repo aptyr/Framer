@@ -1,4 +1,4 @@
-package com.aptyr.framer.parser;
+package com.aptyr.framer;
 
 /**
  * Copyright (C) 2017 Aptyr (github.com/aptyr)
@@ -16,7 +16,7 @@ package com.aptyr.framer.parser;
  * limitations under the License.
  */
 
-public class XMLAttribute {
+class XMLAttribute {
 
     public static String ITEM = "item";
     public static String DRAWABLE = "drawable";

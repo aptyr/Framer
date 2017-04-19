@@ -1,4 +1,4 @@
-package com.aptyr.framer.framer;
+package com.aptyr.framer;
 
 /**
  * Copyright (C) 2017 Aptyr (github.com/aptyr)

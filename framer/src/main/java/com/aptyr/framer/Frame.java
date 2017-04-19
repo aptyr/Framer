@@ -1,6 +1,6 @@
 package com.aptyr.framer;
 
-/*
+/**
  * Copyright (C) 2016 Aptyr (github.com/aptyr)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +17,7 @@ package com.aptyr.framer;
  */
 
 import android.support.annotation.DrawableRes;
+import android.util.Pair;
 
 public class Frame {
 
@@ -28,11 +29,16 @@ public class Frame {
         this.duration = duration;
     }
 
+    public Frame(Pair<Integer, Integer> attributes) {
+        this.resourceId = attributes.first;
+        this.duration = attributes.second;
+    }
+
     @Override
     public String toString() {
         return "Frame{" +
-                "resourceId=" + resourceId +
-                ", duration=" + duration +
+                "resourceId=" + this.resourceId +
+                ", duration=" + this.duration +
                 '}';
     }
 

@@ -1,6 +1,6 @@
 package com.aptyr.framer;
 
-/*
+/**
  * Copyright (C) 2016 Aptyr (github.com/aptyr)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,7 +22,6 @@ import android.support.annotation.DrawableRes;
 import android.util.AttributeSet;
 import android.widget.ImageView;
 
-import java.util.List;
 import java.util.Map;
 
 public class Framer extends ImageView implements Player.DataSource {
@@ -40,39 +39,38 @@ public class Framer extends ImageView implements Player.DataSource {
     }
 
     private void init(Context context) {
-        mFramesHandler = new FramesHandler(context);
-        mPlayer = new Player(this);
+        this.mFramesHandler = new FramesHandler(context);
+        this.mPlayer = new Player(this);
 
-        mPlayer.setDataSource(this);
-
+        this.mPlayer.setDataSource(this);
     }
 
     public void setBackgroundResources(@DrawableRes int... resIDs) {
-        mFramesHandler.setBackgroundResources(resIDs);
+        this.mFramesHandler.setBackgroundResources(resIDs);
     }
 
     @Override
     public void setBackgroundResource(@DrawableRes int resID) {
-        mFramesHandler.setBackgroundResources(resID);
+        this.mFramesHandler.setBackgroundResources(resID);
     }
 
     public Player getPlayer() {
-        return mPlayer;
+        return this.mPlayer;
     }
 
     @Override
-    public Map<Integer, List<Frame>> getFrames() {
-        return mFramesHandler.getFrames();
+    public Map<Integer, XMLFrames> getFrames() {
+        return this.mFramesHandler.getFrames();
     }
 
     @Override
-    public Map<Integer, Map<Frame, Drawable>> getFramesWithDrawables() {
-        return mFramesHandler.getFramesWithDrawables();
+    public Drawable getDrawable(@DrawableRes int resID, Frame frame) {
+        return this.mFramesHandler.getDrawables().get(resID).get(frame);
     }
 
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
-        mPlayer.stop();
+        this.mPlayer.stop();
     }
 }

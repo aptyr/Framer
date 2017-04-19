@@ -1,6 +1,6 @@
 package com.aptyr.framer;
 
-/*
+/**
  * Copyright (C) 2016 Aptyr (github.com/aptyr)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,8 +19,8 @@ package com.aptyr.framer;
 import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.XmlResourceParser;
-import android.support.annotation.DrawableRes;
 import android.support.annotation.XmlRes;
+import android.util.Pair;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -37,48 +37,70 @@ class XmlParser {
         resources = context.getResources();
     }
 
-    public List<Frame> getFrames(@XmlRes int resID) {
-        List<Frame> frames = new ArrayList<>();
+    public XMLFrames getFrames(@XmlRes int resID) {
+
+        XMLFrames.Builder framesBuilder = new XMLFrames.Builder();
 
         try {
-            XmlResourceParser parser = resources.getXml(resID);
+            List<Frame> frames = new ArrayList<>();
+
+            XmlResourceParser parser = this.resources.getXml(resID);
             int eventType = parser.getEventType();
+
             while (eventType != XmlPullParser.END_DOCUMENT) {
-                if (eventType == XmlPullParser.START_DOCUMENT) {
 
-                } else if (eventType == XmlPullParser.START_TAG) {
+                if (eventType == XmlPullParser.START_TAG) {
 
-                    if (parser.getName().equals("item")) {
-                        int duration = 1000;
-                        @DrawableRes int resId = 0;
+                    if (parser.getName().equals(XMLAttribute.ITEM)) {
 
-                        for (int i = 0; i < parser.getAttributeCount(); i++) {
-                            if (parser.getAttributeName(i).equals("drawable")) {
-                                resId = Integer.parseInt(parser.getAttributeValue(i).substring(1));
-                            } else if (parser.getAttributeName(i).equals("duration")) {
-                                duration = parser.getAttributeIntValue(i, 1000);
-                            }
-                        }
+                        frames.add(new Frame(getItemAttributes(parser)));
 
-                        frames.add(new Frame(resId, duration));
+                    } else if (parser.getName().equals(XMLAttribute.ANIMATION_LIST)) {
 
+                        framesBuilder.oneshot(getOneshotAttribute(parser));
 
                     }
-
-                } else if (eventType == XmlPullParser.END_TAG) {
-
-                } else if (eventType == XmlPullParser.TEXT) {
 
                 }
 
                 eventType = parser.next();
             }
 
+            framesBuilder.frames(frames);
 
         } catch (IOException | XmlPullParserException e) {
 
         }
 
-        return frames;
+        return framesBuilder.build();
     }
+
+
+    private Pair<Integer, Integer> getItemAttributes(XmlResourceParser parser) {
+
+        int duration = 0;
+        int resId = 0;
+
+        for (int i = 0; i < parser.getAttributeCount(); ++i) {
+            if (parser.getAttributeName(i).equals(XMLAttribute.DRAWABLE)) {
+                resId = Integer.parseInt(parser.getAttributeValue(i).substring(1));
+            } else if (parser.getAttributeName(i).equals(XMLAttribute.DURATION)) {
+                duration = parser.getAttributeIntValue(i, XMLAttribute.DURATION_DEFAULT);
+            }
+        }
+
+        return new Pair<>(resId, duration);
+
+    }
+
+    private boolean getOneshotAttribute(XmlResourceParser parser) {
+        for (int i = 0; i < parser.getAttributeCount(); i++) {
+
+            if(parser.getAttributeName(i).equals(XMLAttribute.ONESHOT)) {
+                return parser.getAttributeBooleanValue(i, true);
+            }
+        }
+        return true;
+    }
+
 }
